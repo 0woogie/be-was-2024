@@ -37,25 +37,25 @@ public class RequestHandler implements Runnable {
                 String path = requestLineTokens[1];
                 logger.debug("Request Method: {}, Path: {}", method, path);
 
-                if ("/index.html".equals(path)) {
-                    File file = new File(BASE_DIR + path);
-                    if (file.exists()) {
-                        byte[] body = readFileToByteArray(file);
-                        DataOutputStream dos = new DataOutputStream(out);
-                        response200Header(dos, body.length);
-                        responseBody(dos, body);
-                    } else {
-                        DataOutputStream dos = new DataOutputStream(out);
-                        byte[] body = "<h1>File Not Found</h1>".getBytes();
-                        response404Header(dos, body.length);
-                        responseBody(dos, body);
-                    }
+                if ("/".equals(path)) {
+                    path = "/index.html";
+                }
+
+                File file = new File(BASE_DIR + path);
+                if (file.exists()) {
+                    byte[] body = readFileToByteArray(file);
+                    DataOutputStream dos = new DataOutputStream(out);
+                    String ext = getFileExtension(file.getName());
+                    String contentType = ContentType.getContentTypeByExtension(ext);
+                    response200Header(dos, body.length, contentType);
+                    responseBody(dos, body);
                 } else {
                     DataOutputStream dos = new DataOutputStream(out);
                     byte[] body = "<h1>File Not Found</h1>".getBytes();
                     response404Header(dos, body.length);
                     responseBody(dos, body);
                 }
+
             }
 
         } catch (IOException e) {
@@ -75,10 +75,10 @@ public class RequestHandler implements Runnable {
         }
     }
 
-    private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
+    private void response200Header(DataOutputStream dos, int lengthOfBodyContent, String contentType) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
-            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            dos.writeBytes("Content-Type: " + contentType + "\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
@@ -103,6 +103,42 @@ public class RequestHandler implements Runnable {
             dos.flush();
         } catch (IOException e) {
             logger.error(e.getMessage());
+        }
+    }
+
+    private String getFileExtension(String fileName) {
+        if (fileName.lastIndexOf('.') > 0) {
+            return fileName.substring(fileName.lastIndexOf('.') + 1);
+        } else {
+            return "";
+        }
+    }
+
+    private enum ContentType {
+        HTML("html", "text/html;charset=utf-8"),
+        CSS("css", "text/css"),
+        JS("js", "application/javascript"),
+        ICO("ico", "image/x-icon"),
+        PNG("png", "image/png"),
+        JPG("jpg", "image/jpeg"),
+        SVG("svg", "image/svg+xml"),
+        DEFAULT("", "application/octet-stream");
+
+        private final String extension;
+        private final String contentType;
+
+        ContentType(String extension, String contentType) {
+            this.extension = extension;
+            this.contentType = contentType;
+        }
+
+        public static String getContentTypeByExtension(String extension) {
+            for (ContentType type : values()) {
+                if (type.extension.equals(extension)) {
+                    return type.contentType;
+                }
+            }
+            return DEFAULT.contentType;
         }
     }
 }
