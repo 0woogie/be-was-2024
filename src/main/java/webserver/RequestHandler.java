@@ -2,6 +2,13 @@ package webserver;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+
+import db.Database;
+import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,27 +47,64 @@ public class RequestHandler implements Runnable {
                 if ("/".equals(path)) {
                     path = "/index.html";
                 }
-
-                File file = new File(BASE_DIR + path);
-                if (file.exists()) {
-                    byte[] body = readFileToByteArray(file);
-                    DataOutputStream dos = new DataOutputStream(out);
-                    String ext = getFileExtension(file.getName());
-                    String contentType = ContentType.getContentTypeByExtension(ext);
-                    response200Header(dos, body.length, contentType);
-                    responseBody(dos, body);
-                } else {
-                    DataOutputStream dos = new DataOutputStream(out);
-                    byte[] body = "<h1>File Not Found</h1>".getBytes();
-                    response404Header(dos, body.length);
-                    responseBody(dos, body);
+                if ("/registration".equals(path)) {
+                    path = "/registration/index.html";
                 }
 
+                if (path.startsWith("/create")) { //회원가입 요청 처리
+                    handleUserCreation(path, out);
+                } else { //정적 리소스 처리
+                    serveStaticFile(path, out);
+                }
             }
 
         } catch (IOException e) {
             logger.error(e.getMessage());
         }
+    }
+
+    private void serveStaticFile(String path, OutputStream out) throws IOException {
+        File file = new File(BASE_DIR + path);
+        if (file.exists()) { //정적 리소스 존재하는 경우
+            byte[] body = readFileToByteArray(file);
+            DataOutputStream dos = new DataOutputStream(out);
+            String ext = getFileExtension(file.getName());
+            String contentType = ContentType.getContentTypeByExtension(ext);
+            response200Header(dos, body.length, contentType);
+            responseBody(dos, body);
+        } else { //파일이 없는 경우
+            DataOutputStream dos = new DataOutputStream(out);
+            byte[] body = "<h1>File Not Found</h1>".getBytes();
+            response404Header(dos, body.length);
+            responseBody(dos, body);
+        }
+    }
+
+    public void handleUserCreation(String path, OutputStream out) throws IOException {
+
+        //사용자가 입력한 값을 파싱해 User 클래스에 저장
+        String queryString = path.split("\\?")[1];
+        Map<String, String> params = parseQueryString(queryString);
+        User user = new User(params.get("username"), params.get("password"), params.get("nickname"), params.get("email"));
+        Database.addUser(user);
+        logger.debug("User Created: {}", user);
+
+        DataOutputStream dos = new DataOutputStream(out);
+        byte[] body = "<h1>Registration Successful</h1>".getBytes();
+        response200Header(dos, body.length, "text/html");
+        responseBody(dos, body);
+    }
+
+    private Map<String, String> parseQueryString(String queryString) {
+        Map<String, String> params = new HashMap<>();
+        String[] pairs = queryString.split("&");
+        for (String pair : pairs) {
+            String[] keyValue = pair.split("=");
+            String key = URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8);
+            String value = URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8);
+            params.put(key, value);
+        }
+        return params;
     }
 
     private byte[] readFileToByteArray(File file) throws IOException {

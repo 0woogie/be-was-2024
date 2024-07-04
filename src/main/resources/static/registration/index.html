@@ -23,42 +23,74 @@
       </header>
       <div class="page">
         <h2 class="page-title">회원가입</h2>
-        <form class="form">
+        <form class="form" id="registration-form" action="/create" method="GET">
           <div class="textfield textfield_size_s">
             <p class="title_textfield">아이디</p>
             <input
-              class="input_textfield"
-              placeholder="아이디를 입력해주세요"
-              autocomplete="username"
+                    class="input_textfield"
+                    name="username"
+                    placeholder="아이디를 입력해주세요"
+                    autocomplete="username"
+                    required
             />
           </div>
           <div class="textfield textfield_size_s">
             <p class="title_textfield">닉네임</p>
             <input
-              class="input_textfield"
-              placeholder="닉네임을 입력해주세요"
-              autocomplete="username"
+                    class="input_textfield"
+                    name="nickname"
+                    placeholder="닉네임을 입력해주세요"
+                    autocomplete="nickname"
+                    required
             />
           </div>
           <div class="textfield textfield_size_s">
             <p class="title_textfield">비밀번호</p>
             <input
-              class="input_textfield"
-              type="password"
-              placeholder="비밀번호를 입력해주세요"
-              autocomplete="current-password"
+                    class="input_textfield"
+                    type="password"
+                    name="password"
+                    placeholder="비밀번호를 입력해주세요"
+                    autocomplete="current-password"
+                    required
+            />
+          </div>
+          <div class="textfield textfield_size_s">
+            <p class="title_textfield">이메일</p>
+            <input
+                    class="input_textfield"
+                    type="email"
+                    name="email"
+                    placeholder="이메일을 입력해주세요"
+                    autocomplete="email"
+                    required
             />
           </div>
           <button
-            id="registration-btn"
-            class="btn btn_contained btn_size_m"
-            style="margin-top: 24px"
-            type="button"
+                  id="registration-btn"
+                  class="btn btn_contained btn_size_m"
+                  style="margin-top: 24px"
+                  type="submit"
           >
             회원가입
           </button>
         </form>
       </div>
     </div>
+
+<!--    <script>-->
+<!--      document.getElementById('registration-btn').addEventListener('click', function() {-->
+<!--        var userId = document.getElementById('userId').value;-->
+<!--        var name = document.getElementById('name').value;-->
+<!--        var password = document.getElementById('password').value;-->
+<!--        var email = 'javajigi@slipp.net'; // 이메일을 입력받는 필드가 없어서 임시로 하드코딩합니다.-->
+
+<!--        var encodedName = encodeURIComponent(name);-->
+<!--        var encodedEmail = encodeURIComponent(email);-->
+
+<!--        var url = `http://localhost:8080/create?userId=${userId}&password=${password}&name=${encodedName}&email=${encodedEmail}`;-->
+<!--        window.location.href = url;-->
+<!--      });-->
+<!--    </script>-->
   </body>
 </html>
